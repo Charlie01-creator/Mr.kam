@@ -1,1 +1,24 @@
+# Kamulegeya Mubarak Kiggundu
+
+> Mathematics educator, tutor and author. Author of "Essentials of Applied
+> Mathematics in Statistics and Numerical Methods" (2025 Edition).
+
+Kamulegeya Mubarak Kiggundu is a mathematics educator with teaching and
+Head of Department experience, and the author of a 2025 textbook on
+applied mathematics, statistics and numerical methods. This site lists
+his book, tutoring services, and ways for students, parents, schools and
+book buyers to get in touch.
+
+## Pages
+- [Home](https://www.kamulegeyamubarak.example/): Overview and entry points.
+- [About](https://www.kamulegeyamubarak.example/about.html): Background, teaching experience, authorship.
+- [Books & Publications](https://www.kamulegeyamubarak.example/books.html): Essentials of Applied Mathematics in Statistics and Numerical Methods (2025 Edition).
+- [Tutoring](https://www.kamulegeyamubarak.example/tutoring.html): One-on-one, group, exam-prep and online tutoring.
+- [Book a Session](https://www.kamulegeyamubarak.example/book-a-session.html): Tutoring session request form.
+- [Order Books](https://www.kamulegeyamubarak.example/order-books.html): Book ordering form.
+- [Resources](https://www.kamulegeyamubarak.example/resources.html): Student resources (published as they become available).
+- [Schools & Institutions](https://www.kamulegeyamubarak.example/schools.html): School partnership inquiries.
+- [Contact](https://www.kamulegeyamubarak.example/contact.html): Direct contact and general inquiries.
+- [FAQ](https://www.kamulegeyamubarak.example/faq.html): Common questions.
+
 
