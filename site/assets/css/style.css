@@ -383,6 +383,7 @@ legend{ font-weight: 600; font-size: 0.9rem; padding: 0 6px; }
 .mobile-nav.open{ display: flex; }
 .mobile-nav-top{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
 .mobile-nav a{
+  display: block;
   color: var(--ink-on-dark); text-decoration: none; font-family: var(--font-display);
   font-size: 1.5rem; padding: 14px 0; border-bottom: 1px solid rgba(241,233,216,0.15);
 }
@@ -393,4 +394,3 @@ legend{ font-weight: 600; font-size: 0.9rem; padding: 0 6px; }
   /* Intentionally not auto-switching to a dark theme: the paper/ink palette
      is the brand's identity in both light and dark OS settings. */
 }
-
