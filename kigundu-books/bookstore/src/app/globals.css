@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply bg-paper-warm text-ink font-sans antialiased; }
+  h1, h2, h3 { @apply font-serif text-navy-900; }
+  :focus-visible { outline: 3px solid theme("colors.gold.DEFAULT"); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+}

@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role { ADMIN STAFF }
+enum PublishStatus { DRAFT PUBLISHED ARCHIVED }
+enum BookFormat { PHYSICAL DIGITAL }
+enum OrderStatus { PENDING AWAITING_PAYMENT PAID PROCESSING READY_FOR_COLLECTION DISPATCHED COMPLETED CANCELLED }
+enum PaymentStatus { UNPAID PAYMENT_CLAIMED CONFIRMED REFUNDED }
+enum FulfilmentType { DELIVERY COLLECTION }
+enum PaymentKind { MOBILE_MONEY BANK_TRANSFER CASH_ON_DELIVERY CASH_ON_COLLECTION }
+enum RequestStatus { NEW IN_REVIEW QUOTED CLOSED }
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         Role     @default(STAFF)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Author {
+  id        String   @id @default(cuid())
+  name      String
+  bio       String?  @db.Text
+  verified  Boolean  @default(false)
+  books     Book[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Book {
+  id             String        @id @default(cuid())
+  slug           String        @unique
+  title          String
+  subtitle       String?
+  authorId       String
+  author         Author        @relation(fields: [authorId], references: [id])
+  summary        String?       @db.Text
+  description    String?       @db.Text
+  tableOfContents String?      @db.Text
+  subject        String?
+  level          String?
+  audience       String?
+  edition        String?
+  publicationYear Int?
+  isbn           String?
+  format         BookFormat    @default(PHYSICAL)
+  /// Whole UGX. Null = price not set, so the book cannot be ordered online.
+  priceUgx       Int?
+  /// Null = stock not tracked / unknown. Never show invented numbers.
+  stock          Int?
+  status         PublishStatus @default(DRAFT)
+  /// Names of fields the owner has confirmed, e.g. ["title","edition"].
+  verifiedFields String[]
+  isTemporaryCover Boolean     @default(true)
+  images         BookImage[]
+  orderItems     OrderItem[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([status, subject, level])
+}
+
+model BookImage {
+  id        String @id @default(cuid())
+  bookId    String
+  book      Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String
+  sortOrder Int    @default(0)
+}
+
+model Order {
+  id            String         @id @default(cuid())
+  reference     String         @unique
+  status        OrderStatus    @default(PENDING)
+  paymentStatus PaymentStatus  @default(UNPAID)
+  paymentKind   PaymentKind?
+  customerName  String
+  phone         String
+  email         String?
+  fulfilment    FulfilmentType
+  deliveryZoneId String?
+  deliveryZone  DeliveryZone?  @relation(fields: [deliveryZoneId], references: [id])
+  address       String?
+  notes         String?
+  subtotalUgx   Int
+  deliveryFeeUgx Int           @default(0)
+  totalUgx      Int
+  items         OrderItem[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model OrderItem {
+  id           String @id @default(cuid())
+  orderId      String
+  order        Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  bookId       String?
+  book         Book?  @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  /// Snapshots so history survives later edits or deletion of the book.
+  titleSnapshot String
+  unitPriceUgx Int
+  quantity     Int
+}
+
+model BulkRequest {
+  id           String        @id @default(cuid())
+  organisation String
+  contactName  String
+  phone        String
+  email        String?
+  deliveryLocation String
+  requirements String?       @db.Text
+  status       RequestStatus @default(NEW)
+  items        BulkRequestItem[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model BulkRequestItem {
+  id        String      @id @default(cuid())
+  requestId String
+  request   BulkRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  bookId    String?
+  titleText String
+  quantity  Int
+}
+
+model Enquiry {
+  id        String        @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  message   String        @db.Text
+  status    RequestStatus @default(NEW)
+  createdAt DateTime      @default(now())
+}
+
+model DeliveryZone {
+  id        String  @id @default(cuid())
+  name      String
+  feeUgx    Int
+  active    Boolean @default(true)
+  orders    Order[]
+}
+
+model PaymentMethod {
+  id           String      @id @default(cuid())
+  kind         PaymentKind
+  label        String
+  instructions String      @db.Text
+  enabled      Boolean     @default(false)
+}
+
+/// Editable site copy: home, contact details, about sections.
+model SiteContent {
+  key       String   @id
+  value     String   @db.Text
+  verified  Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}
+
+model Faq {
+  id        String  @id @default(cuid())
+  question  String
+  answer    String  @db.Text
+  sortOrder Int     @default(0)
+  published Boolean @default(true)
+}
+
+model Policy {
+  slug      String   @id // privacy, terms, returns, delivery
+  title     String
+  body      String   @db.Text
+  reviewed  Boolean  @default(false) // owner must review before publishing
+  published Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}
