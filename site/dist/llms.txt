@@ -1,0 +1,19 @@
+# Kamulegeya Mathematics
+
+> Website of Mr. Kamulegeya Mubarak Kiggundu, mathematics educator and textbook author.
+
+## Pages
+- [index.html](/)
+- [about](/about/)
+- [books](/books/)
+- [books/essentials-of-applied-mathematics](/books/essentials-of-applied-mathematics/)
+- [tutoring](/tutoring/)
+- [book-a-session](/book-a-session/)
+- [order-books](/order-books/)
+- [resources](/resources/)
+- [schools](/schools/)
+- [contact](/contact/)
+- [faq](/faq/)
+
+## Notes
+- Only verified information is published. Contact details and further book titles are added once confirmed.
