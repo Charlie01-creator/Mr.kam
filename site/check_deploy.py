@@ -9,13 +9,15 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)));D="dist";fail=0
 def bad(m):
     global fail;fail+=1;print("FAIL",m)
 # 1. whitelist of files that may be public
-OK_EXT={".html",".css",".js",".svg",".png",".txt",".xml"}
+OK_EXT={".html",".css",".js",".svg",".png",".txt",".xml",".woff",".jpg",".jpeg",".webp",".pdf"}   # .woff = self-hosted fonts; images/pdf only appear once real assets are supplied
+BINARY={".woff",".png",".jpg",".jpeg",".webp",".pdf"}
 for r,_,fs in os.walk(D):
     for f in fs:
         if f.startswith(".") or os.path.splitext(f)[1] not in OK_EXT:bad("unexpected public file: "+os.path.join(r,f))
 # 2. secrets / private data scan
 for r,_,fs in os.walk(D):
     for f in fs:
+        if os.path.splitext(f)[1] in BINARY:continue
         t=open(os.path.join(r,f),errors="ignore").read()
         for pat,n in((r"(api[_-]?key|secret|token|password)\s*[:=]","credential-like"),(r"sk-[A-Za-z0-9]{10,}","key-like"),(r"[\w.+-]+@[\w-]+\.[\w.]+","email address"),(r"\+?\d[\d ()-]{8,}\d","phone-like number")):
             m=re.search(pat,t,re.I)
@@ -47,6 +49,21 @@ for p in pages:
         if full in checked:continue
         checked.add(full);s2,_=get(full)
         if s2!=200:bad(f"{p}: {u} -> {full} returned {s2}")
+for css in [u for u in checked if u.endswith(".css")]:
+    _,ct=get(css)
+    for m in re.findall(r"url\(([^)]+)\)",ct):
+        m=m.strip("'\" ")
+        if m.startswith("data:"):continue
+        full=urljoin(css,m).split("#")[0]
+        if full in checked:continue
+        checked.add(full);s3,_=get(full)
+        if s3!=200:bad(f"CSS url({m}) -> {full} returned {s3}")
+import json
+try:
+    vj=json.load(open("vercel.json"));hk={h["key"] for blk in vj.get("headers",[]) for h in blk["headers"]}
+    for need in("X-Content-Type-Options","Referrer-Policy","X-Frame-Options","Content-Security-Policy","Permissions-Policy"):
+        if need not in hk:bad("vercel.json missing header "+need)
+except Exception as e:bad("vercel.json unreadable: "+str(e))
 for f in("/robots.txt","/llms.txt","/404.html","/assets/og.png","/assets/favicon.svg"):
     if get(B+f)[0]!=200:bad(f+" not served")
 # 404 page: every link/asset is root-absolute so it works at any missing URL depth
