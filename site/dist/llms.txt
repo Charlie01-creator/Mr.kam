@@ -16,5 +16,4 @@
 - [faq](/faq/)
 
 ## Notes
-- Only verified information is published. Contact details, images and further book titles are added once confirmed.
-- Forms prepare a message for the visitor to send; nothing is submitted automatically. Enquiries are not confirmed bookings or orders.
+- Only verified information is published. Contact details and further book titles are added once confirmed.
