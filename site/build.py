@@ -8,6 +8,9 @@ DOMAIN=(sys.argv[1] if len(sys.argv)>1 else os.environ.get("SITE_URL","")).strip
 CFG={"phone":"","whatsapp":"","email":""}   # whatsapp = digits with country code
 NAME="Mr. Kamulegeya Mubarak Kiggundu"; SHORT="Kamulegeya Mathematics"
 BOOKS=json.load(open("books.json",encoding="utf-8"))   # catalogue: edit books.json, then run build.py. First entry is the featured book.
+import hashlib
+def _v(*parts):return hashlib.md5("".join(parts).encode()).hexdigest()[:8]   # cache-busting: URL changes whenever the file changes
+CSSV=_v(open("assets/site.css",encoding="utf-8").read());JSV=_v(open("assets/site.js",encoding="utf-8").read(),json.dumps(CFG))
 E=html.escape
 NAV=[("","Home"),("about/","About"),("books/","Publications"),("tutoring/","Tutoring"),("resources/","Learning Resources"),("schools/","Schools"),("contact/","Contact")]
 SLUG=BOOKS[0]["slug"]
@@ -44,8 +47,8 @@ def page(path,title,desc,body,r="",cur=None,items=None,extra=None,robots=None):
 {can}
 <meta property="og:type" content="website"><meta property="og:site_name" content="{SHORT}"><meta property="og:title" content="{E(full)}"><meta property="og:description" content="{E(desc)}">
 {og}
-<meta name="theme-color" content="#12233f"><link rel="icon" href="{r}assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="{r}assets/site.css">
+<meta name="theme-color" content="#F4EFE4"><link rel="icon" href="{r}assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="{r}assets/site.css?v={CSSV}">
 <script type="application/ld+json">{ld(path,items,extra)}</script></head>
 <body><a class="skip" href="#main">Skip to content</a>
 <header><div class="util"><div class="w"><span>Orders and enquiries are handled directly by Mr. Kam</span><span><a href="{r}order-books/">Order books</a><a href="{r}contact/">Contact</a></span></div></div>
@@ -57,7 +60,7 @@ def page(path,title,desc,body,r="",cur=None,items=None,extra=None,robots=None):
 {subs(r) if cur=="books/" and path!="books/" else ""}
 <main id="main" tabindex="-1">{body}</main>
 {foot(r)}
-<script src="{r}assets/site.js" defer></script></body></html>'''
+<script src="{r}assets/site.js?v={JSV}" defer></script></body></html>'''
 def btn(h,t,o=False,g=False):return f'<a class="btn{" o" if o else ""}{" g" if g else ""}" href="{h}">{t}</a>'
 def card(h,p=""):return f'<div class="card"><h2 class="ct">{h}</h2>{p}</div>'
 def slot(r,name,label,alt,cls="",eager=False):
@@ -85,8 +88,8 @@ def subs(r):return '<nav class="subs" aria-label="Subjects"><div class="w"><span
 TEST={f"books/{x['slug']}/index.html" for x in BOOKS if x.get("test")}
 SAMPLE='<p class="empty"><b>Sample entry.</b> Replace this title and its details in books.json before launch.</p>'
 LN='<path d="M5 70H155" stroke="currentColor" stroke-width="1" fill="none"/>'
-ART={"Statistics":'<svg viewBox="0 0 160 80" role="img" aria-label="Bell curve with its mean marked">'+LN+'<path d="M10 70C45 68 55 8 80 8S115 68 150 70M80 8V70" fill="none" stroke="#b08a3e" stroke-width="2.5"/></svg>',
-"Numerical Methods":'<svg viewBox="0 0 160 80" role="img" aria-label="Tangent line stepping toward a root of a curve">'+LN+'<path d="M20 78C60 72 105 45 140 6" fill="none" stroke="#b08a3e" stroke-width="2.5"/><path d="M122 20L82 70" stroke="currentColor" stroke-dasharray="4 3" fill="none"/><circle cx="122" cy="20" r="3.5" fill="#b08a3e"/><circle cx="82" cy="70" r="3.5" fill="currentColor"/></svg>'}
+ART={"Statistics":'<svg viewBox="0 0 160 80" role="img" aria-label="Bell curve with its mean marked">'+LN+'<path d="M10 70C45 68 55 8 80 8S115 68 150 70M80 8V70" fill="none" stroke="#b68a48" stroke-width="2.5"/></svg>',
+"Numerical Methods":'<svg viewBox="0 0 160 80" role="img" aria-label="Tangent line stepping toward a root of a curve">'+LN+'<path d="M20 78C60 72 105 45 140 6" fill="none" stroke="#b68a48" stroke-width="2.5"/><path d="M122 20L82 70" stroke="currentColor" stroke-dasharray="4 3" fill="none"/><circle cx="122" cy="20" r="3.5" fill="#b68a48"/><circle cx="82" cy="70" r="3.5" fill="currentColor"/></svg>'}
 def toc(ts):return '<ul class="toc">'+"".join(f"<li><span>{t}</span>{ART.get(t,'')}</li>" for t in ts)+"</ul>"
 def subj(r):
     return '<ul class="subj">'+"".join(f'<li>{ART.get(t,"")}<p class="ct sn">{t}</p><p class="note">{sum(t in b["topics"] for b in BOOKS)} publication{"" if sum(t in b["topics"] for b in BOOKS)==1 else "s"}</p><a class="more" href="{r}books/subject/{slug(t)}/">View {t} publications</a></li>' for t in SUB)+"</ul>"
@@ -175,7 +178,7 @@ if os.path.isdir("assets/img"):
     for f in os.listdir("assets/img"):
         if f.lower().endswith((".webp",".jpg",".jpeg",".png")):shutil.copy("assets/img/"+f,"dist/assets/img/"+f)
 js=open("dist/assets/site.js").read().replace("__CFG__",json.dumps(CFG));open("dist/assets/site.js","w").write(js)
-open("dist/assets/favicon.svg","w").write('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#12233f"/><rect x="4" y="4" width="56" height="56" fill="none" stroke="#b08a3e" stroke-width="2"/><text x="32" y="43" font-size="26" font-weight="700" text-anchor="middle" fill="#b08a3e" font-family="Georgia,serif">KM</text></svg>')
+open("dist/assets/favicon.svg","w").write('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#14213d"/><rect x="4" y="4" width="56" height="56" fill="none" stroke="#b68a48" stroke-width="2"/><text x="32" y="43" font-size="26" font-weight="700" text-anchor="middle" fill="#b68a48" font-family="Georgia,serif">KM</text></svg>')
 for p,c in P.items():
     os.makedirs(os.path.dirname("dist/"+p) or "dist",exist_ok=True);open("dist/"+p,"w").write(c)
 open("dist/robots.txt","w").write("User-agent: *\nAllow: /\n"+(f"Sitemap: {DOMAIN}/sitemap.xml\n" if DOMAIN else ""))
