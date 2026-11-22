@@ -1,0 +1,63 @@
+[
+  {
+    "slug": "essentials-of-applied-mathematics",
+    "title": "Essentials of Applied Mathematics in Statistics and Numerical Methods",
+    "edition": "2025 Edition",
+    "desc": "A mathematics textbook covering applied mathematics in statistics and numerical methods.",
+    "topics": [
+      "Statistics",
+      "Numerical Methods"
+    ]
+  },
+  {
+    "slug": "sample-title-2",
+    "title": "Sample Title: Algebra and Functions",
+    "edition": "Sample Edition",
+    "desc": "Description to be added by the author.",
+    "topics": [
+      "Algebra"
+    ],
+    "test": true
+  },
+  {
+    "slug": "sample-title-3",
+    "title": "Sample Title: Calculus Foundations",
+    "edition": "Sample Edition",
+    "desc": "Description to be added by the author.",
+    "topics": [
+      "Calculus"
+    ],
+    "test": true
+  },
+  {
+    "slug": "sample-title-4",
+    "title": "Sample Title: Geometry and Trigonometry",
+    "edition": "Sample Edition",
+    "desc": "Description to be added by the author.",
+    "topics": [
+      "Geometry"
+    ],
+    "test": true
+  },
+  {
+    "slug": "sample-title-5",
+    "title": "Sample Title: Statistics Revision Guide",
+    "edition": "Sample Edition",
+    "desc": "Description to be added by the author.",
+    "topics": [
+      "Statistics"
+    ],
+    "test": true
+  },
+  {
+    "slug": "sample-title-6",
+    "title": "Sample Title: Mathematics Revision Questions",
+    "edition": "Sample Edition",
+    "desc": "Description to be added by the author.",
+    "topics": [
+      "Algebra",
+      "Revision"
+    ],
+    "test": true
+  }
+]

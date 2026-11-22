@@ -7,6 +7,8 @@
 - [about](/about/)
 - [books](/books/)
 - [books/essentials-of-applied-mathematics](/books/essentials-of-applied-mathematics/)
+- [books/subject/numerical-methods](/books/subject/numerical-methods/)
+- [books/subject/statistics](/books/subject/statistics/)
 - [tutoring](/tutoring/)
 - [book-a-session](/book-a-session/)
 - [order-books](/order-books/)

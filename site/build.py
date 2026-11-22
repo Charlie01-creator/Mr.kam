@@ -7,8 +7,7 @@ DOMAIN=(sys.argv[1] if len(sys.argv)>1 else os.environ.get("SITE_URL","")).strip
 # ---- VERIFIED CONTACT DETAILS: fill in only after confirming with Mr. Kamulegeya ----
 CFG={"phone":"","whatsapp":"","email":""}   # whatsapp = digits with country code
 NAME="Mr. Kamulegeya Mubarak Kiggundu"; SHORT="Kamulegeya Mathematics"
-BOOKS=[{"slug":"essentials-of-applied-mathematics","title":"Essentials of Applied Mathematics in Statistics and Numerical Methods","edition":"2025 Edition",
- "desc":"A mathematics textbook covering applied mathematics in statistics and numerical methods.","topics":["Statistics","Numerical Methods"]}]
+BOOKS=json.load(open("books.json",encoding="utf-8"))   # catalogue: edit books.json, then run build.py. First entry is the featured book.
 E=html.escape
 NAV=[("","Home"),("about/","About"),("books/","Publications"),("tutoring/","Tutoring"),("resources/","Learning Resources"),("schools/","Schools"),("contact/","Contact")]
 SLUG=BOOKS[0]["slug"]
@@ -49,9 +48,13 @@ def page(path,title,desc,body,r="",cur=None,items=None,extra=None,robots=None):
 <link rel="stylesheet" href="{r}assets/site.css">
 <script type="application/ld+json">{ld(path,items,extra)}</script></head>
 <body><a class="skip" href="#main">Skip to content</a>
-<header><div class="w bar"><a class="logo" href="{r or './'}"><span class="mono" aria-hidden="true">KM</span><span>Kamulegeya<small>Mathematics, Mr. Kam</small></span></a><nav class="d" aria-label="Main">{nav(r,cur)}</nav>
+<header><div class="util"><div class="w"><span>Orders and enquiries are handled directly by Mr. Kam</span><span><a href="{r}order-books/">Order books</a><a href="{r}contact/">Contact</a></span></div></div>
+<div class="w bar"><a class="logo" href="{r or './'}"><span class="mono" aria-hidden="true">KM</span><span>Kamulegeya<small>Mathematics, Mr. Kam</small></span></a>
+<form class="sf" role="search" action="{r}books/" method="get"><label class="sr" for="hq">Search publications</label><input id="hq" name="q" type="search" placeholder="Search publications" autocomplete="off"><button type="submit">Search</button></form>
 <a class="btn g hd" href="{r}book-a-session/">Book a Session</a><button id="mb" aria-expanded="false" aria-controls="mp">Menu</button></div>
+<div class="nrow"><div class="w"><nav class="d" aria-label="Main">{nav(r,cur)}</nav></div></div>
 <nav id="mp" aria-label="Mobile">{nav(r,cur)}<a href="{r}book-a-session/">Book a Session</a><a href="{r}order-books/">Order a Book</a></nav></header>
+{subs(r) if cur=="books/" and path!="books/" else ""}
 <main id="main" tabindex="-1">{body}</main>
 {foot(r)}
 <script src="{r}assets/site.js" defer></script></body></html>'''
@@ -66,7 +69,7 @@ def cover(r,b,cls=""):return slot(r,"cover-"+b["slug"],"Cover photograph to be s
 def tile(b,r,h="h3"):
     u=f'{r}books/{b["slug"]}/'
     return f'''<article class="tile" data-tile data-title="{E(b["title"])}" data-topics="{E("|".join(b["topics"]))}"><a class="tc" href="{u}" tabindex="-1" aria-hidden="true">{cover(r,b)}</a>
-<{h}><a href="{u}">{E(b["title"])}</a></{h}><p class="note">{b["edition"]}, {E(AUTH)}</p><p class="note">{", ".join(b["topics"])}</p><a class="more" href="{u}">View details</a></article>'''
+<{h}><a href="{u}">{E(b["title"])}</a></{h}><p class="note">{b["edition"]}, {E(AUTH)}</p><p class="note">{", ".join(b["topics"])}</p>{"<p class=note><b>Sample entry</b>, replace before launch</p>" if b.get("test") else ""}<a class="more" href="{u}">View details</a></article>'''
 AUTH="Kamulegeya Mubarak Kiggundu"
 def fld(n,l,t="text",req=True,opts=None,ex=""):
     if t=="textarea":c=f'<textarea name="{n}" rows="4" id="{n}"></textarea>'
@@ -76,6 +79,17 @@ def fld(n,l,t="text",req=True,opts=None,ex=""):
 def form(k,fields,b):
     return f'<form id="f" data-k="{k}" novalidate>{"".join(fields)}<button class="btn" type="submit">{b}</button></form><div id="res" aria-live="polite"></div>'
 P={}
+import re
+def slug(t):return re.sub(r"[^a-z0-9]+","-",t.lower()).strip("-")
+def subs(r):return '<nav class="subs" aria-label="Subjects"><div class="w"><span>Subjects</span>'+"".join(f'<a href="{r}books/subject/{slug(t)}/">{t}</a>' for t in SUB)+'</div></nav>'
+TEST={f"books/{x['slug']}/index.html" for x in BOOKS if x.get("test")}
+SAMPLE='<p class="empty"><b>Sample entry.</b> Replace this title and its details in books.json before launch.</p>'
+LN='<path d="M5 70H155" stroke="currentColor" stroke-width="1" fill="none"/>'
+ART={"Statistics":'<svg viewBox="0 0 160 80" role="img" aria-label="Bell curve with its mean marked">'+LN+'<path d="M10 70C45 68 55 8 80 8S115 68 150 70M80 8V70" fill="none" stroke="#b08a3e" stroke-width="2.5"/></svg>',
+"Numerical Methods":'<svg viewBox="0 0 160 80" role="img" aria-label="Tangent line stepping toward a root of a curve">'+LN+'<path d="M20 78C60 72 105 45 140 6" fill="none" stroke="#b08a3e" stroke-width="2.5"/><path d="M122 20L82 70" stroke="currentColor" stroke-dasharray="4 3" fill="none"/><circle cx="122" cy="20" r="3.5" fill="#b08a3e"/><circle cx="82" cy="70" r="3.5" fill="currentColor"/></svg>'}
+def toc(ts):return '<ul class="toc">'+"".join(f"<li><span>{t}</span>{ART.get(t,'')}</li>" for t in ts)+"</ul>"
+def subj(r):
+    return '<ul class="subj">'+"".join(f'<li>{ART.get(t,"")}<p class="ct sn">{t}</p><p class="note">{sum(t in b["topics"] for b in BOOKS)} publication{"" if sum(t in b["topics"] for b in BOOKS)==1 else "s"}</p><a class="more" href="{r}books/subject/{slug(t)}/">View {t} publications</a></li>' for t in SUB)+"</ul>"
 r=""
 b0=BOOKS[0]
 bu=f"books/{SLUG}/"
@@ -89,21 +103,22 @@ f'''<!--full--><section class="hero w"><div class="ht"><h1>Mathematics taught in
 <a class="mini" href="{bu}">{cover(r,b0,"sm")}<span><b>Featured publication</b>{E(b0["title"])}</span></a></div></section>
 <section class="facts" aria-label="Professional summary"><dl class="w">{"".join(f"<div><dt>{a}</dt><dd>{b}</dd></div>" for a,b in FACTS)}</dl></section>
 <section class="dk show" id="featured"><div class="w sg"><div class="plinth">{cover(r,b0)}</div><div><p class="kick">Featured publication</p><h2>{E(b0["title"])}</h2>
-<p class="by">{AUTH}, {b0["edition"]}</p><p>{E(b0["desc"])}</p><p class="kick">Subjects covered</p><ul class="toc">{"".join(f"<li>{t}</li>" for t in b0["topics"])}</ul>
+<p class="by">{AUTH}, {b0["edition"]}</p><p>{E(b0["desc"])}</p><p class="kick">Subjects covered</p>{toc(b0["topics"])}
 <div class="row">{btn(bu,"View publication details",g=True)}{btn("order-books/","Enquire or order",True)}</div></div></div></section>
 <section class="sec w" id="library"><div class="sh"><h2>Publications</h2>{btn("books/","View all publications",True)}</div>
-<div class="shelf">{"".join(tile(b,r) for b in BOOKS)}</div><p class="note">Browse by subject: {" · ".join(SUB)}. New titles appear here only once each is confirmed.</p></section>
+<div class="shelf">{"".join(tile(b,r) for b in BOOKS)}</div><h3>Browse by subject</h3>{subj(r)}<p class="note">New titles appear here only once each is confirmed.</p></section>
 <section class="sec w auth"><div>{slot(r,"portrait-about","Professional portrait to be supplied","Portrait of Mr. Kamulegeya Mubarak Kiggundu","pt")}</div><div><h2>Meet the author</h2>
 <p class="lead">A mathematics educator whose textbook comes out of classroom teaching and department leadership.</p>
 <p>Mr. Kamulegeya is a mathematics teacher who has held Head of Department roles. His 2025 book names teaching and leadership experience at Buddo Secondary School, Kibuli Secondary School and Lubiri Secondary School.</p>
-<div class="row">{btn("about/","Read the full profile")}</div></div></section>
-<section class="sec w" id="learn"><h2>Learning and tutoring</h2><ul class="rows">
-<li><h3>Mathematics tutoring</h3><p>One-on-one, group, exam-preparation and online sessions. Availability is confirmed on enquiry.</p>{btn("tutoring/","See tutoring options",True)}</li>
-<li><h3>Individual learning support</h3><p>Students and parents can request a session by topic, date and mode.</p>{btn("book-a-session/","Book a session",True)}</li>
-<li><h3>Educational resources</h3><p>Notes, worked examples and practice material, published here once verified.</p>{btn("resources/","Browse learning resources",True)}</li>
-<li><h3>Schools and institutions</h3><p>Department support, workshops, revision programmes and textbook supply.</p>{btn("schools/","Discuss a school partnership",True)}</li></ul></section>
+<a class="mini start" href="{bu}">{cover(r,b0,"sm")}<span><b>Start with</b>{E(b0["title"])}</span></a><div class="row">{btn("about/","Read the full profile")}</div></div></section>
+<section class="sec w" id="learn"><h2>Learning and tutoring</h2><div class="lg">
+<div class="lp l1 dk"><h3>Mathematics tutoring</h3><p>One-on-one, group, exam-preparation and online sessions. Availability is confirmed on enquiry.</p>{btn("tutoring/","See tutoring options",g=True)}</div>
+<div class="lp l2"><h3>Individual learning support</h3><p>Students and parents can request a session by topic, date and mode.</p>{btn("book-a-session/","Book a session",True)}</div>
+<div class="lp l3"><h3>Educational resources</h3><p>Notes, worked examples and practice material, published here once verified.</p>{btn("resources/","Browse learning resources",True)}</div>
+<div class="lp l4"><div><h3>Schools and institutions</h3><p>Department support, workshops, revision programmes and textbook supply.</p></div>{btn("schools/","Discuss a school partnership")}</div></div></section>
 <section class="sec w trust"><div><h2>Professional background</h2><p class="lead">Only confirmed facts appear here. Further credentials will be added as Mr. Kamulegeya verifies them.</p></div>
 <ul class="rows tight"><li><h3>Mathematics teaching</h3><p>Mathematics teacher, with Head of Department roles.</p></li><li><h3>Schools named in his book</h3><p>Buddo S.S, Kibuli S.S and Lubiri S.S.</p></li><li><h3>Publication</h3><p>{E(b0["title"])}, {b0["edition"]}.</p></li></ul></section>
+<section class="sec w" id="how"><h2>How ordering works</h2><ol class="how"><li><b>Choose a book</b><span>Browse by subject and open the publication details.</span></li><li><b>Send an order enquiry</b><span>Tell Mr. Kam which titles you want, by WhatsApp, email or a copied summary.</span></li><li><b>Confirm directly</b><span>Availability and payment are arranged with Mr. Kam. Nothing is charged online.</span></li></ol></section>
 <section class="dk cta"><div class="w"><h2>Start with the book, a session, or a question.</h2><div class="row">{btn("books/","Explore publications",g=True)}{btn("tutoring/","Enquire about tutoring",True)}{btn("contact/","Contact Mr. Kam",True)}</div></div></section>''',r="",cur="")
 r="../"
 P["about/index.html"]=page("about/","About","Profile of Mr. Kamulegeya Mubarak Kiggundu, mathematics educator, Head of Department and author of a 2025 applied mathematics textbook.",
@@ -112,21 +127,26 @@ crumbs(r,[("","About")])+f'''<div class="split"><aside class="stick">{slot(r,"po
 <p>Mr. Kamulegeya is a mathematics teacher who has held Head of Department mathematics roles. His 2025 book names teaching and leadership experience at Buddo Secondary School, Kibuli Secondary School and Lubiri Secondary School, and he is the author of <i>{E(b0["title"])}</i>.</p>
 <h2>Career</h2><div class="tl"><div><h3>Mathematics teaching and Head of Department roles</h3><p>Buddo S.S, Kibuli S.S and Lubiri S.S, as named in the book. Dates and current affiliation are being confirmed.</p></div><div><h3>2025, Author</h3><p><i>{E(b0["title"])}</i>, {b0["edition"]}.</p></div></div>
 <h2>Educational philosophy</h2><div class="empty">Mr. Kamulegeya’s own statement on how he teaches will be published here in his words.</div>
-<h2>Publications and activities</h2><p>See <a href="{r}books/">Publications</a> for his textbook, or <a href="{r}tutoring/">Tutoring</a> for the sessions he offers.</p>
+<h2>Publications</h2><div class="shelf one">{tile(b0,r,"h3")}</div><h2>Educational activities</h2><p>Alongside writing, Mr. Kamulegeya takes <a href="{r}tutoring/">tutoring</a> requests, shares <a href="{r}resources/">learning resources</a> as they are verified, and answers <a href="{r}schools/">school and institutional enquiries</a>.</p>
 <div class="row">{btn(r+"tutoring/","About tutoring")}{btn(r+"books/","See publications",True)}</div></div></div>''',r,"about/",[("About","about/")])
 P["books/index.html"]=page("books/","Publications","Mathematics textbooks by Kamulegeya Mubarak Kiggundu, including Essentials of Applied Mathematics in Statistics and Numerical Methods (2025 Edition).",
 crumbs(r,[("","Publications")])+f'''<h1>Publications</h1><p class="lead">Textbooks by {NAME}.</p>
-{('<div class="tools"><label for="q">Search publications</label><input id="q" type="search" autocomplete="off"><div class="chips" role="group" aria-label="Filter by subject"><button class="chip" data-chip="" aria-pressed="true">All</button>'+"".join(f'<button class="chip" data-chip="{E(t)}" aria-pressed="false">{t}</button>' for t in SUB)+'</div></div>') if len(BOOKS)>1 else f'<p class="note">Subjects: {", ".join(SUB)}. Search and filters switch on automatically once the catalogue has more than one title.</p>'}
-<p class="note" id="count" aria-live="polite">{len(BOOKS)} {"publication" if len(BOOKS)==1 else "publications"}</p><div class="shelf">{"".join(tile(b,r,"h2") for b in BOOKS)}</div><p class="note">Further titles will be added here as each is confirmed.</p>''',r,"books/",[("Publications","books/")],
-{"@type":"ItemList","itemListElement":[{"@type":"ListItem","position":i+1,"name":b["title"]} for i,b in enumerate(BOOKS)]})
+{('<div class="tools"><label for="q">Search publications</label><input id="q" type="search" autocomplete="off"><div class="chips" role="group" aria-label="Filter by subject"><button class="chip" data-chip="" aria-pressed="true">All</button>'+"".join(f'<button class="chip" data-chip="{E(t)}" aria-pressed="false">{t} ({sum(t in b["topics"] for b in BOOKS)})</button>' for t in SUB)+'</div></div>') if len(BOOKS)>1 else f''}
+<p class="note" id="count" aria-live="polite">{len(BOOKS)} {"publication" if len(BOOKS)==1 else "publications"}</p><div class="shelf">{"".join(tile(b,r,"h2") for b in BOOKS)}</div><p class="note">Further titles will be added here as each is confirmed.</p><h2>Browse by subject</h2>{subj(r)}''',r,"books/",[("Publications","books/")],
+{"@type":"ItemList","itemListElement":[{"@type":"ListItem","position":i+1,"name":b["title"]} for i,b in enumerate([x for x in BOOKS if not x.get("test")])]})
 r="../../"
 for b in BOOKS:
     ex={"@type":"Book","name":b["title"],"author":{"@type":"Person","name":AUTH},"bookEdition":b["edition"],"description":b["desc"],"inLanguage":"en"}
     P[f"books/{b['slug']}/index.html"]=page(f"books/{b['slug']}/",b["title"],b["desc"]+" "+b["edition"]+" by Kamulegeya Mubarak Kiggundu.",
     crumbs(r,[("books/","Publications"),("",b["title"])])+f'''<div class="split bk"><aside class="stick">{cover(r,b)}</aside><div class="prose"><h1>{E(b["title"])}</h1><p class="lead">{AUTH}, {b["edition"]}</p><p>{E(b["desc"])}</p>
-<dl class="spec"><div><dt>Author</dt><dd>{AUTH}</dd></div><div><dt>Edition</dt><dd>{b["edition"]}</dd></div><div><dt>Subjects</dt><dd>{", ".join(b["topics"])}</dd></div></dl>
-<h2>Topics covered</h2><ul class="toc">{"".join(f"<li>{t}</li>" for t in b["topics"])}</ul><p class="note">Intended audience, a full contents list and sample pages will be added once confirmed and permitted.</p>
-<div class="row">{btn(r+"order-books/","Enquire or order",g=True)}{btn(r+"books/","All publications",True)}</div></div></div>''',r,"books/",[("Publications","books/"),(b["title"],f"books/{b['slug']}/")],ex)
+{SAMPLE if b.get("test") else ""}<dl class="spec"><div><dt>Author</dt><dd>{AUTH}</dd></div><div><dt>Edition</dt><dd>{b["edition"]}</dd></div><div><dt>Subjects</dt><dd>{", ".join(b["topics"])}</dd></div>{"".join(f"<div><dt>{k}</dt><dd>{E(b[f])}</dd></div>" for f,k in (("audience","Audience"),("price","Price")) if b.get(f))}</dl>
+<h2>Topics covered</h2>{toc(b["topics"])}<h2>Sample pages</h2>{slot(r,"sample-"+b["slug"],"Sample pages to be supplied","Sample pages from "+b["title"],"sp")}<p class="note">{"A full contents list" if b.get("audience") else "Intended audience and a full contents list"} will be added once confirmed.</p>
+<div class="row">{btn(r+"order-books/","Enquire or order",g=True)}{btn(r+"contact/","Ask a question",True)}{btn(r+"books/","All publications",True)}</div></div></div>''',r,"books/",[("Publications","books/"),(b["title"],f"books/{b['slug']}/")],None if b.get("test") else ex,"noindex" if b.get("test") else None)
+r2="../../../"
+for t in SUB:
+    bs=[x for x in BOOKS if t in x["topics"]];sp=f"books/subject/{slug(t)}/";n=len(bs)
+    if all(x.get("test") for x in bs):TEST.add(sp+"index.html")
+    P[sp+"index.html"]=page(sp,t+" Publications",f"Mathematics publications on {t} by {AUTH}.",crumbs(r2,[("books/","Publications"),("",t)])+f'<h1>{t}</h1><p class="lead">{n} publication{"" if n==1 else "s"} on this subject.</p><div class="shelf">{"".join(tile(x,r2,"h2") for x in bs)}</div><div class="row">{btn(r2+"books/","All publications",True)}</div>',r2,"books/",[("Publications","books/"),(t,sp)],None,"noindex" if all(x.get("test") for x in bs) else None)
 r="../"
 P["tutoring/index.html"]=page("tutoring/","Mathematics Tutoring","Request one-on-one, group, exam-preparation or online mathematics tutoring with Mr. Kamulegeya Mubarak Kiggundu.",
 crumbs(r,[("","Tutoring")])+f'''<h1>Mathematics Tutoring</h1><p class="lead">Tell us what the student needs; Mr. Kamulegeya will confirm what he can offer.</p>
@@ -159,6 +179,6 @@ open("dist/assets/favicon.svg","w").write('<svg xmlns="http://www.w3.org/2000/sv
 for p,c in P.items():
     os.makedirs(os.path.dirname("dist/"+p) or "dist",exist_ok=True);open("dist/"+p,"w").write(c)
 open("dist/robots.txt","w").write("User-agent: *\nAllow: /\n"+(f"Sitemap: {DOMAIN}/sitemap.xml\n" if DOMAIN else ""))
-open("dist/llms.txt","w").write(f"# {SHORT}\n\n> Website of {NAME}, mathematics educator and textbook author.\n\n## Pages\n"+"".join(f"- [{k.replace('/index.html','') or 'Home'}]({DOMAIN}/{k.replace('index.html','')})\n" for k in P if k!="404.html")+"\n## Notes\n- Only verified information is published. Contact details and further book titles are added once confirmed.\n")
-if DOMAIN:open("dist/sitemap.xml","w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+"".join(f"<url><loc>{DOMAIN}/{k.replace('index.html','')}</loc></url>\n" for k in P if k!="404.html")+"</urlset>\n")
-print("built",len(P),"pages")
+open("dist/llms.txt","w").write(f"# {SHORT}\n\n> Website of {NAME}, mathematics educator and textbook author.\n\n## Pages\n"+"".join(f"- [{k.replace('/index.html','') or 'Home'}]({DOMAIN}/{k.replace('index.html','')})\n" for k in P if k!="404.html" and k not in TEST)+"\n## Notes\n- Only verified information is published. Contact details and further book titles are added once confirmed.\n")
+if DOMAIN:open("dist/sitemap.xml","w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+"".join(f"<url><loc>{DOMAIN}/{k.replace('index.html','')}</loc></url>\n" for k in P if k!="404.html" and k not in TEST)+"</urlset>\n")
+print("built",len(P),"pages"+(f" | WARNING: {sum(1 for x in BOOKS if x.get("test"))} sample books still in books.json (noindex, excluded from sitemap)" if TEST else ""))
